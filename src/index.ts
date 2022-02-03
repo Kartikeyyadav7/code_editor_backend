@@ -36,13 +36,11 @@ wss1.on("connection", function connection(ws) {
         console.log("received: %s", data);
     });
 
-    ws.send("fileSys");
-
     ws.on("open", () => {
         console.log("Open");
         ws.send(
             JSON.stringify({
-                type: "update-folder-column",
+                type: "update-all-files",
                 contents: fileContentProvider(),
             })
         );
@@ -96,18 +94,6 @@ wss1.on("connection", function connection(ws) {
     });
 });
 
-const shell = os.platform() === "win32" ? "powershell.exe" : "bash";
-
-const ptyEnv: any = process.env;
-
-const ptyProcess = pty.spawn(shell, [], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
-    cwd: path.join(__dirname, `/code`),
-    env: ptyEnv,
-});
-
 wss2.on("connection", function connection(ws) {
     ws.on("message", function message(data) {
         console.log("received: %s", data);
@@ -119,29 +105,29 @@ wss2.on("connection", function connection(ws) {
         console.log("The client disconnected");
     });
 
-    // ws.on("disconnect", () => {
-    // 	console.log("Disconnected Socket: ");
-    // });
+    const shell = os.platform() === "win32" ? "powershell.exe" : "bash";
+
+    const ptyEnv: any = process.env;
+
+    const ptyProcess = pty.spawn(shell, [], {
+        name: "xterm-color",
+        cols: 80,
+        rows: 30,
+        cwd: path.join(__dirname, `/code`),
+        env: ptyEnv,
+    });
 
     ptyProcess.onData((data: string) => {
         console.log("I am serving the output now");
-        // socket.emit("output", e);
         ws.send(data);
     });
 
-    // ws.on("message", (data: string) => {
-    //     console.log("got the message", data);
-    //     ptyProcess.write(data);
-    // });
-
-    // ptyProcess.write('static-server -p 1137')
+    ptyProcess.write("static-server -p 1337\r");
 
     ws.on("message", (input: string) => {
         console.log("I am getting the input now");
-        // ptyProcess.write('cd code')
         ptyProcess.write(input);
     });
-    ws.send("terminal");
 });
 
 server.on("upgrade", function upgrade(request, socket, head) {
@@ -163,6 +149,6 @@ server.on("upgrade", function upgrade(request, socket, head) {
     }
 });
 
-server.listen(8080, () => {
-    console.log("server listening on port 8080");
+server.listen(8081, () => {
+    console.log("server listening on port 8081");
 });
