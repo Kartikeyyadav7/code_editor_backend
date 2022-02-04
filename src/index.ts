@@ -117,14 +117,14 @@ wss2.on("connection", function connection(ws) {
         env: ptyEnv,
     });
 
-    ptyProcess.onData((data: string) => {
+    ptyProcess.onData((data: any) => {
         console.log("I am serving the output now");
         ws.send(data);
     });
 
-    ptyProcess.write("static-server -p 1337\r");
+    // ptyProcess.write("static-server -p 1338");
 
-    ws.on("message", (input: string) => {
+    ws.on("message", (input: any) => {
         console.log("I am getting the input now");
         ptyProcess.write(input);
     });
@@ -149,6 +149,6 @@ server.on("upgrade", function upgrade(request, socket, head) {
     }
 });
 
-server.listen(8081, () => {
-    console.log("server listening on port 8081");
+server.listen(8080, () => {
+    console.log("server listening on port 8080");
 });
