@@ -101,10 +101,6 @@ wss2.on("connection", function connection(ws) {
 
     console.log("Connected to client");
 
-    ws.on("close", () => {
-        console.log("The client disconnected");
-    });
-
     const shell = os.platform() === "win32" ? "powershell.exe" : "bash";
 
     const ptyEnv: any = process.env;
@@ -117,16 +113,21 @@ wss2.on("connection", function connection(ws) {
         env: ptyEnv,
     });
 
-    ptyProcess.onData((data: any) => {
+    ptyProcess.onData((data: string) => {
         console.log("I am serving the output now");
         ws.send(data);
     });
 
-    // ptyProcess.write("static-server -p 1338");
+    ptyProcess.write("static-server -p 1338\r");
 
-    ws.on("message", (input: any) => {
+    ws.on("message", (input: string) => {
         console.log("I am getting the input now");
         ptyProcess.write(input);
+    });
+
+    ws.on("close", () => {
+        console.log("Closing the terminal ");
+        ptyProcess.write("npx kill-port 1338\r");
     });
 });
 
